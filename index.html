@@ -91,6 +91,13 @@
   <button onclick="showRandom()">🎲 Random Word</button>
   <button onclick="startQuiz()">🎓 Start Quiz</button>
   <div id="results"></div>
+<div id="speechControls">
+<label for="voiceSelect">Voice:</label>
+<select id="voiceSelect"></select>
+
+  <label for="rateControl">Speed:</label>
+  <input type="range" id="rateControl" min="0.5" max="2" step="0.1" value="1" />
+</div>
   <div id="quiz"></div>
 <button id="retakeQuizBtn" onclick="startQuiz()" style="display:none;">🔁 Retake Quiz</button>
   <div id="history"></div>
@@ -165,7 +172,6 @@
         </div>
       `;
     }
-
 function startQuiz() {
   if (examples.length < 5) {
     document.getElementById("quiz").innerHTML = "<p>Not enough data for a quiz.</p>";
@@ -185,10 +191,13 @@ function startQuiz() {
 
     return `
       <div class="quiz-question">
-        <p><strong>Q${i + 1}:</strong> What is the English meaning of "<em>${pair.Danish}</em>"?</p>
-        ${options.map(opt => `
-          <button onclick="checkAnswer(this, '${opt}', '${correct}')">${opt}</button>
-        `).join("")}
+        <div><strong>Q${i + 1}:</strong> What is the English meaning of "<em>${pair.Danish}</em>"?</div>
+        <button class="audio" onclick="speakDanish('${pair.Danish.replace(/'/g, "\\'")}')">🔊 Hear Danish</button>
+        <div class="answers">
+          ${options.map(opt => `
+            <button class="answer" data-correct="${correct}" onclick="checkAnswer(this)">${opt}</button>
+          `).join("")}
+        </div>
       </div>
     `;
   }).join("");
@@ -196,31 +205,57 @@ function startQuiz() {
   document.getElementById("quiz").innerHTML = `<h3>Quiz Mode</h3>${quizHTML}`;
   document.getElementById("retakeQuizBtn").style.display = "block";
 }
+function checkAnswer(button) {
+  const selected = button.textContent;
+  const correct = button.getAttribute("data-correct");
+  const buttons = button.parentElement.querySelectorAll("button.answer");
 
-    function checkAnswer(button, selected, correct) {
-      const buttons = button.parentElement.querySelectorAll("button");
-      buttons.forEach(btn => {
-        btn.disabled = true;
-        if (btn.textContent === correct) {
-          btn.style.backgroundColor = "#c8e6c9"; // green
-        }
-      });
-      if (selected !== correct) {
-        button.style.backgroundColor = "#ffcdd2"; // red
-      }
+  buttons.forEach(btn => {
+    btn.disabled = true;
+    if (btn.textContent === correct) {
+      btn.style.backgroundColor = "#c8e6c9"; // green
     }
+  });
 
+  if (selected !== correct) {
+    button.style.backgroundColor = "#ffcdd2"; // red
+  }
+}
     function highlight(text, query) {
       const regex = new RegExp(`(${query})`, "gi");
       return text.replace(regex, "<span class='highlight'>$1</span>");
     }
+function speakDanish(text) {
+  const utterance = new SpeechSynthesisUtterance(text);
+  utterance.lang = "da-DK";
 
-    function speakDanish(text) {
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.lang = "da-DK";
-      speechSynthesis.speak(utterance);
-    }
+  const rate = parseFloat(document.getElementById("rateControl").value);
+  utterance.rate = rate;
 
+  const selectedVoiceName = document.getElementById("voiceSelect").value;
+  const voices = speechSynthesis.getVoices();
+  const match = voices.find(v => v.name === selectedVoiceName);
+
+  if (match) {
+    utterance.voice = match;
+  }
+
+  speechSynthesis.speak(utterance);
+}
+function populateVoiceOptions() {
+  const select = document.getElementById("voiceSelect");
+  const voices = speechSynthesis.getVoices().filter(v => v.lang === "da-DK");
+
+  if (voices.length === 0) {
+    select.innerHTML = `<option disabled>No Danish voices found</option>`;
+    return;
+  }
+
+  select.innerHTML = voices.map(v => `<option value="${v.name}">${v.name}</option>`).join("");
+}
+
+// Some browsers load voices asynchronously
+speechSynthesis.onvoiceschanged = populateVoiceOptions;
     function copyToClipboard(text) {
       navigator.clipboard.writeText(text).then(() => {
         alert("Copied to clipboard!");
