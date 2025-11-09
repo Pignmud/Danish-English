@@ -225,13 +225,13 @@ function showRandom() {
 }
 
 function startQuiz() {
-  if (examples.length < 5) {
+  if (examples.length < 10) {
     document.getElementById("quiz").innerHTML = "<p>Not enough data for a quiz.</p>";
     document.getElementById("retakeQuizBtn").style.display = "none";
     return;
   }
 
-  const shuffled = [...examples].sort(() => 0.5 - Math.random()).slice(0, 5);
+  const shuffled = [...examples].sort(() => 0.5 - Math.random()).slice(0, 10);
   const quizHTML = shuffled.map((pair, i) => {
     const correct = pair.English;
     const options = [correct];
