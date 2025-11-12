@@ -11,11 +11,12 @@
       --accent: #0055a5;
       --card: #fff;
     }
+
     body.dark {
-      --bg: #1e1e1e;
+      --bg: #000000;
       --text: #eee;
-      --accent: #66ccff;
-      --card: #2c2c2c;
+      --accent: #ff9900;
+      --card: #1a1a1a;
     }
 
     body {
@@ -23,13 +24,24 @@
       margin: 2em;
       background-color: var(--bg);
       color: var(--text);
-      transition: background 0.3s, color 0.3s;
+      transition: background-color 0.4s ease, color 0.4s ease;
     }
+
     h1 {
       color: var(--accent);
       font-size: 1.8em;
       margin-bottom: 0.5em;
+      transition: color 0.4s ease;
     }
+
+    input, select, button,
+    #results, #quiz,
+    #history span,
+    .quiz-question,
+    .result {
+      transition: background-color 0.4s ease, color 0.4s ease, border-color 0.4s ease;
+    }
+
     input, select, button {
       width: 100%;
       padding: 0.6em;
@@ -40,6 +52,7 @@
       background-color: var(--card);
       color: var(--text);
     }
+
     #results, #quiz {
       background-color: var(--card);
       padding: 1em;
@@ -47,31 +60,37 @@
       box-shadow: 0 0 5px rgba(0,0,0,0.1);
       margin-bottom: 1em;
     }
+
     .result, .quiz-question {
       margin-bottom: 1em;
     }
+
     .highlight {
-      background: linear-gradient(90deg, #cc6600, #ff9900); /* burnt orange gradient */
+      background: linear-gradient(90deg, #cc6600, #ff9900);
       color: white;
       font-weight: bold;
       padding: 0 3px;
       border-radius: 4px;
     }
+
     .controls {
       display: flex;
       gap: 0.5em;
       flex-wrap: wrap;
       margin-top: 0.5em;
     }
+
     button.audio, button.copy {
       flex: 1;
       padding: 0.3em 0.6em;
       font-size: 0.9em;
       cursor: pointer;
     }
+
     #history {
       margin-top: 1em;
     }
+
     #history span {
       display: inline-block;
       background: var(--card);
@@ -81,20 +100,100 @@
       border-radius: 4px;
       cursor: pointer;
     }
-    .row {
-     display: flex;
-     gap: 0.5em;
-     margin-bottom: 1em;
-    }
-   .row input,
-   .row button {
-    width: 50%;
-    margin-bottom: 0;
-    box-sizing: border-box;
-    vertical-align: middle;
-}
 
-</style>
+    .row.clearable {
+      display: flex;
+      gap: 0.5em;
+      margin-bottom: 1em;
+    }
+
+    .input-wrapper {
+      position: relative;
+      flex: 1;
+    }
+
+    .input-wrapper input {
+      width: 100%;
+      padding-right: 2em;
+      box-sizing: border-box;
+    }
+
+    .clear-x {
+      position: absolute;
+      right: 0.5em;
+      top: 50%;
+      transform: translateY(-50%);
+      cursor: pointer;
+      font-size: 1.2em;
+      color: var(--accent);
+      transition: color 0.3s ease;
+    }
+
+    .clear-x:hover {
+      color: #cc5500;
+    }
+
+    .row.clearable button {
+      flex: 1;
+      box-sizing: border-box;
+    }
+
+    .top-button {
+      background: linear-gradient(90deg, #e68a2e, #ffb84d);
+      color: white;
+      border: none;
+      padding: 0.5em 1em;
+      margin: 0.5em 0;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.9em;
+      font-weight: bold;
+      transition: background 0.3s ease, transform 0.2s ease;
+    }
+
+    .top-button:hover {
+      background: linear-gradient(90deg, #ffb84d, #e68a2e);
+      transform: translateY(-1px);
+    }
+
+    .quiz-footer {
+      display: flex;
+      gap: 0.5em;
+      flex-wrap: wrap;
+      justify-content: flex-start;
+      margin-top: 1em;
+    }
+
+    .fade-in {
+      animation: fadeIn 0.5s ease forwards;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .correct {
+      background-color: #c8e6c9;
+      color: #000;
+      font-weight: bold;
+      border-radius: 4px;
+      padding: 0.3em 0.6em;
+    }
+
+    .incorrect {
+      background-color: #ffcdd2;
+      color: #000;
+      font-weight: bold;
+      border-radius: 4px;
+      padding: 0.3em 0.6em;
+    }
+
+    .answer {
+      min-height: 3em;
+      transition: background-color 0.3s ease, color 0.3s ease;
+    }
+  </style>
 </head>
 <body>
   <h1>Danish-English Practice</h1>
@@ -104,321 +203,367 @@
     <option value="danish">Search: Danish only</option>
     <option value="english">Search: English only</option>
   </select>
-<div class="row">
-  <input type="text" id="searchInput" placeholder="Type a word..." />
+
+<!-- 🔍 Search input row with clear button -->
+<div class="row clearable">
+  <div class="input-wrapper">
+    <input type="text" id="searchInput" placeholder="Type a word..." />
+    <span class="clear-x" onclick="clearSearchInput()">❌</span>
+  </div>
   <button onclick="handleSearch()">🔍 Search</button>
 </div>
-<div class="row">
-  <button onclick="showRandom()">🎲 Random Word</button>
-  <button onclick="startQuiz()">🎓 Start Quiz</button>
-</div>
-<div class="row">
+
+<!-- ⏪⏩ Navigation row for Back/Forward history -->
+<div class="row clearable">
   <button onclick="goBack()">⏪ Back</button>
   <button onclick="goForward()">⏩ Forward</button>
 </div>
-<div id="results"></div>
-<div id="speechControls">
-<label for="voiceSelect">Voice:</label>
-<select id="voiceSelect"></select>
 
-  <label for="rateControl">Speed:</label>
-  <input type="range" id="rateControl" min="0.5" max="2" step="0.1" value="1" />
+<!-- 🎲🎓 Action row for Random Word and Start Quiz -->
+<div class="row clearable">
+  <button onclick="showRandom()">🎲 Random Word</button>
+  <button onclick="startQuiz()">🎓 Start Quiz</button>
 </div>
+
+
+  <div id="results"></div>
+  <button onclick="scrollToTop()" class="top-button">⬆️ Back to Top</button>
+
+  <div id="speechControls">
+    <label for="voiceSelect">Voice:</label>
+    <select id="voiceSelect"></select>
+
+    <label for="rateControl">Speed:</label>
+    <input type="range" id="rateControl" min="0.5" max="2" step="0.1" value="1" />
+  </div>
+
   <div id="quiz"></div>
-<button id="retakeQuizBtn" onclick="startQuiz()" style="display:none;">🔁 Retake Quiz</button>
+
+  <div class="quiz-footer">
+    <button id="retakeQuizBtn" onclick="startQuiz()" style="display:none;">🔁 Retake Quiz</button>
+    <button onclick="scrollToTop()" class="top-button">⬆️ Back to Top</button>
+  </div>
+
   <div id="history"></div>
 
-  <script>
-let navigationHistory = [];
-let navIndex = -1;
-let isNavigating = false;
-let examples = [];
 
-    fetch("danish_english_pairs.json")
-      .then(res => res.json())
-      .then(data => {
-        examples = data;
-        loadHistory();
-      })
-      .catch(err => {
-        console.error("Fetch error:", err);
-        document.getElementById("results").innerHTML = "<p style='color:red;'>Failed to load JSON.</p>";
-      });
 
-document.getElementById("searchInput").addEventListener("keydown", function (e) {
-  if (e.key === "Enter") {
-    handleSearch();
-  }
-});
-
-function handleSearch(passedQuery = null) {
-  const query = passedQuery !== null
-    ? passedQuery.trim().toLowerCase()
-    : document.getElementById("searchInput").value.trim().toLowerCase();
-
-  if (query.length === 0) {
+<script>
+  // Utility functions
+  function clearSearchInput() {
+    document.getElementById("searchInput").value = "";
     document.getElementById("results").innerHTML = "";
-    return;
   }
 
-  if (!isNavigating) {
-    navigationHistory.push({ type: "search", query });
-    navIndex = navigationHistory.length - 1;
+  function copyToClipboard(text) {
+    navigator.clipboard.writeText(text).then(() => {
+      alert("Copied to clipboard!");
+    });
   }
-  isNavigating = false;
 
-  document.getElementById("searchInput").value = query;
+  function scrollToTop() {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
 
-  saveToHistory(query);
-  const mode = document.getElementById("searchMode").value;
+  function toggleDarkMode() {
+    document.body.classList.toggle("dark");
+  }
 
-  const queryLength = query.length;
-  const threshold = queryLength <= 3 ? 0 : queryLength <= 5 ? 1 : 2;
+  // Voice setup
+  function populateVoiceOptions() {
+    const select = document.getElementById("voiceSelect");
+    const voices = speechSynthesis.getVoices().filter(v => v.lang === "da-DK");
 
-  const matches = examples.filter(pair => {
-    const danish = pair.Danish.toLowerCase();
-    const english = pair.English.toLowerCase();
-
-    if (mode === "danish") {
-      return danish.includes(query) || levenshtein(danish, query) <= threshold;
+    if (voices.length === 0) {
+      select.innerHTML = `<option disabled>No Danish voices found</option>`;
+      return;
     }
 
-    if (mode === "english") {
-      return english.includes(query) || levenshtein(english, query) <= threshold;
-    }
+    select.innerHTML = voices.map(v => `<option value="${v.name}">${v.name}</option>`).join("");
+  }
 
-    return (
-      danish.includes(query) || levenshtein(danish, query) <= threshold ||
-      english.includes(query) || levenshtein(english, query) <= threshold
-    );
+  speechSynthesis.onvoiceschanged = populateVoiceOptions;
+
+  // App logic
+  let navigationHistory = [];
+  let navIndex = -1;
+  let isNavigating = false;
+  let examples = [];
+
+  fetch("danish_english_pairs.json")
+    .then(res => res.json())
+    .then(data => {
+      examples = data;
+      loadHistory();
+    })
+    .catch(err => {
+      console.error("Fetch error:", err);
+      document.getElementById("results").innerHTML = "<p style='color:red;'>Failed to load JSON.</p>";
+    });
+
+  document.getElementById("searchInput").addEventListener("keydown", function (e) {
+    if (e.key === "Enter") {
+      handleSearch();
+    }
   });
 
-  document.getElementById("results").innerHTML = matches.map(pair =>
-    `<div class="result">
-      <strong>Danish:</strong> ${highlight(pair.Danish, query)}<br>
-      <strong>English:</strong> ${highlight(pair.English, query)}
-      <div class="controls">
-        <button class="audio" onclick="speakDanish('${pair.Danish.replace(/'/g, "\\'")}')">🔊 Hear Danish</button>
-        <button class="copy" onclick="copyToClipboard('${pair.Danish} — ${pair.English}')">📋 Copy</button>
-      </div>
-    </div>`
-  ).join("");
-}
+  function handleSearch(passedQuery = null) {
+    const query = passedQuery !== null
+      ? passedQuery.trim().toLowerCase()
+      : document.getElementById("searchInput").value.trim().toLowerCase();
 
-function showRandom() {
-  if (examples.length === 0) return;
-  const pair = examples[Math.floor(Math.random() * examples.length)];
-
-  if (!isNavigating) {
-    navigationHistory.push({ type: "random", pair });
-    navIndex = navigationHistory.length - 1;
-  }
-  isNavigating = false;
-
-  document.getElementById("searchInput").value = "";
-  document.getElementById("results").innerHTML = `
-    <div class="result">
-      <strong>Danish:</strong> ${pair.Danish}<br>
-      <strong>English:</strong> ${pair.English}
-      <div class="controls">
-        <button class="audio" onclick="speakDanish('${pair.Danish.replace(/'/g, "\\'")}')">🔊 Hear Danish</button>
-        <button class="copy" onclick="copyToClipboard('${pair.Danish} — ${pair.English}')">📋 Copy</button>
-      </div>
-    </div>
-  `;
-}
-
-function startQuiz() {
-  if (examples.length < 10) {
-    document.getElementById("quiz").innerHTML = "<p>Not enough data for a quiz.</p>";
-    document.getElementById("retakeQuizBtn").style.display = "none";
-    return;
-  }
-
-  const shuffled = [...examples].sort(() => 0.5 - Math.random()).slice(0, 10);
-  const quizHTML = shuffled.map((pair, i) => {
-    const correct = pair.English;
-    const options = [correct];
-    while (options.length < 4) {
-      const alt = examples[Math.floor(Math.random() * examples.length)].English;
-      if (!options.includes(alt)) options.push(alt);
+    if (query.length === 0) {
+      document.getElementById("results").innerHTML = "";
+      return;
     }
-    options.sort(() => 0.5 - Math.random());
 
-    return `
-      <div class="quiz-question">
-        <div><strong>Q${i + 1}:</strong> What is the English meaning of "<em>${pair.Danish}</em>"?</div>
-        <button class="audio" onclick="speakDanish('${pair.Danish.replace(/'/g, "\\'")}')">🔊 Hear Danish</button>
-        <div class="answers">
-          ${options.map(opt => `
-            <button class="answer" data-correct="${correct}" onclick="checkAnswer(this)">${opt}</button>
-          `).join("")}
+    if (!isNavigating) {
+      navigationHistory.push({ type: "search", query });
+      navIndex = navigationHistory.length - 1;
+    }
+    isNavigating = false;
+
+    document.getElementById("searchInput").value = query;
+
+    saveToHistory(query);
+    const mode = document.getElementById("searchMode").value;
+
+    const queryLength = query.length;
+    const threshold = queryLength <= 3 ? 0 : queryLength <= 5 ? 1 : 2;
+
+    const matches = examples.filter(pair => {
+      const danish = pair.Danish.toLowerCase();
+      const english = pair.English.toLowerCase();
+
+      if (mode === "danish") {
+        return danish.includes(query) || levenshtein(danish, query) <= threshold;
+      }
+
+      if (mode === "english") {
+        return english.includes(query) || levenshtein(english, query) <= threshold;
+      }
+
+      return (
+        danish.includes(query) || levenshtein(danish, query) <= threshold ||
+        english.includes(query) || levenshtein(english, query) <= threshold
+      );
+    });
+
+    document.getElementById("results").innerHTML = matches.map(pair =>
+      `<div class="result">
+        <strong>Danish:</strong> ${highlight(pair.Danish, query)}<br>
+        <strong>English:</strong> ${highlight(pair.English, query)}
+        <div class="controls">
+          <button class="audio" onclick="speakDanish('${pair.Danish.replace(/'/g, "\\'")}')">🔊 Hear Danish</button>
+          <button class="copy" onclick="copyToClipboard('${pair.Danish} — ${pair.English}')">📋 Copy</button>
+        </div>
+      </div>`
+    ).join("");
+  }
+
+  function showRandom() {
+    if (examples.length === 0) return;
+    const pair = examples[Math.floor(Math.random() * examples.length)];
+
+    if (!isNavigating) {
+      navigationHistory.push({ type: "random", pair });
+      navIndex = navigationHistory.length - 1;
+    }
+    isNavigating = false;
+
+    document.getElementById("searchInput").value = "";
+    document.getElementById("results").innerHTML = `
+      <div class="result">
+        <strong>Danish:</strong> ${pair.Danish}<br>
+        <strong>English:</strong> ${pair.English}
+        <div class="controls">
+          <button class="audio" onclick="speakDanish('${pair.Danish.replace(/'/g, "\\'")}')">🔊 Hear Danish</button>
+          <button class="copy" onclick="copyToClipboard('${pair.Danish} — ${pair.English}')">📋 Copy</button>
         </div>
       </div>
     `;
-  }).join("");
+  }
 
-  document.getElementById("quiz").innerHTML = `<h3>Quiz Mode</h3>${quizHTML}`;
-  document.getElementById("retakeQuizBtn").style.display = "block";
-}
+  function speakDanish(text) {
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = "da-DK";
 
-function goBack() {
-  if (navIndex > 0) {
-    navIndex--;
-    const entry = navigationHistory[navIndex];
-    isNavigating = true;
+    const rate = parseFloat(document.getElementById("rateControl").value);
+    utterance.rate = rate;
 
-    if (entry.type === "search") {
-      handleSearch(entry.query);
-    } else {
-      const pair = entry.pair;
-      document.getElementById("searchInput").value = "";
-      document.getElementById("results").innerHTML = `
-        <div class="result">
-          <strong>Danish:</strong> ${pair.Danish}<br>
-          <strong>English:</strong> ${pair.English}
-          <div class="controls">
-            <button class="audio" onclick="speakDanish('${pair.Danish.replace(/'/g, "\\'")}')">🔊 Hear Danish</button>
-            <button class="copy" onclick="copyToClipboard('${pair.Danish} — ${pair.English}')">📋 Copy</button>
+    const selectedVoiceName = document.getElementById("voiceSelect").value;
+    const voices = speechSynthesis.getVoices();
+    const match = voices.find(v => v.name === selectedVoiceName);
+
+    if (match) {
+      utterance.voice = match;
+    }
+
+    speechSynthesis.speak(utterance);
+  }
+
+  function highlight(text, query) {
+    const regex = new RegExp(`(${query})`, "gi");
+    return text.replace(regex, "<span class='highlight'>$1</span>");
+  }
+</script>
+
+
+<script>
+  function startQuiz() {
+    if (examples.length < 10) {
+      document.getElementById("quiz").innerHTML = "<p>Not enough data for a quiz.</p>";
+      document.getElementById("retakeQuizBtn").style.display = "none";
+      return;
+    }
+
+    const shuffled = [...examples].sort(() => 0.5 - Math.random()).slice(0, 10);
+    const quizHTML = shuffled.map((pair, i) => {
+      const correct = pair.English;
+      const options = [correct];
+      while (options.length < 4) {
+        const alt = examples[Math.floor(Math.random() * examples.length)].English;
+        if (!options.includes(alt)) options.push(alt);
+      }
+      options.sort(() => 0.5 - Math.random());
+
+      return `
+        <div class="quiz-question fade-in">
+          <div><strong>Q${i + 1}:</strong> What is the English meaning of "<em>${pair.Danish}</em>"?</div>
+          <button class="audio" onclick="speakDanish('${pair.Danish.replace(/'/g, "\\'")}')">🔊 Hear Danish</button>
+          <div class="answers">
+            ${options.map(opt => `
+              <button class="answer" data-correct="${correct}" onclick="checkAnswer(this)">${opt}</button>
+            `).join("")}
           </div>
         </div>
       `;
-    }
-  } else {
-    alert("No history to go back to.");
+    }).join("");
+
+    document.getElementById("quiz").innerHTML = `
+      <h3 id="quizTitle" class="fade-in">Quiz Mode</h3>
+      <div class="fade-in">${quizHTML}</div>
+    `;
+
+    const retakeBtn = document.getElementById("retakeQuizBtn");
+    retakeBtn.style.display = "block";
+    retakeBtn.classList.add("fade-in");
+
+    setTimeout(() => {
+      const slider = document.getElementById("rateControl");
+      if (slider) {
+        slider.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    }, 100);
   }
-}
 
-function goForward() {
-  if (navIndex < navigationHistory.length - 1) {
-    navIndex++;
-    const entry = navigationHistory[navIndex];
-    isNavigating = true;
+  function checkAnswer(button) {
+    const selected = button.textContent;
+    const correct = button.getAttribute("data-correct");
+    const buttons = button.parentElement.querySelectorAll("button.answer");
 
-    if (entry.type === "search") {
-      handleSearch(entry.query);
+    buttons.forEach(btn => {
+      btn.disabled = true;
+      if (btn.textContent === correct) {
+        btn.classList.add("correct");
+        btn.innerHTML = "✅ " + btn.textContent;
+      }
+    });
+
+    if (selected !== correct) {
+      button.classList.add("incorrect");
+      button.innerHTML = "❌ " + button.textContent;
+    }
+  }
+
+  function goBack() {
+    if (navIndex > 0) {
+      navIndex--;
+      const entry = navigationHistory[navIndex];
+      isNavigating = true;
+
+      if (entry.type === "search") {
+        handleSearch(entry.query);
+      } else {
+        showRandomFromHistory(entry.pair);
+      }
     } else {
-      const pair = entry.pair;
-      document.getElementById("searchInput").value = "";
-      document.getElementById("results").innerHTML = `
-        <div class="result">
-          <strong>Danish:</strong> ${pair.Danish}<br>
-          <strong>English:</strong> ${pair.English}
-          <div class="controls">
-            <button class="audio" onclick="speakDanish('${pair.Danish.replace(/'/g, "\\'")}')">🔊 Hear Danish</button>
-            <button class="copy" onclick="copyToClipboard('${pair.Danish} — ${pair.English}')">📋 Copy</button>
-          </div>
+      alert("No history to go back to.");
+    }
+  }
+
+  function goForward() {
+    if (navIndex < navigationHistory.length - 1) {
+      navIndex++;
+      const entry = navigationHistory[navIndex];
+      isNavigating = true;
+
+      if (entry.type === "search") {
+        handleSearch(entry.query);
+      } else {
+        showRandomFromHistory(entry.pair);
+      }
+    } else {
+      alert("No forward history available.");
+    }
+  }
+
+  function showRandomFromHistory(pair) {
+    document.getElementById("searchInput").value = "";
+    document.getElementById("results").innerHTML = `
+      <div class="result">
+        <strong>Danish:</strong> ${pair.Danish}<br>
+        <strong>English:</strong> ${pair.English}
+        <div class="controls">
+          <button class="audio" onclick="speakDanish('${pair.Danish.replace(/'/g, "\\'")}')">🔊 Hear Danish</button>
+          <button class="copy" onclick="copyToClipboard('${pair.Danish} — ${pair.English}')">📋 Copy</button>
         </div>
-      `;
-    }
-  } else {
-    alert("No forward history available.");
-  }
-}
-
-function checkAnswer(button) {
-  const selected = button.textContent;
-  const correct = button.getAttribute("data-correct");
-  const buttons = button.parentElement.querySelectorAll("button.answer");
-
-  buttons.forEach(btn => {
-    btn.disabled = true;
-    if (btn.textContent === correct) {
-      btn.style.backgroundColor = "#c8e6c9"; // green
-    }
-  });
-
-  if (selected !== correct) {
-    button.style.backgroundColor = "#ffcdd2"; // red
-  }
-}
-    function highlight(text, query) {
-      const regex = new RegExp(`(${query})`, "gi");
-      return text.replace(regex, "<span class='highlight'>$1</span>");
-    }
-function speakDanish(text) {
-  const utterance = new SpeechSynthesisUtterance(text);
-  utterance.lang = "da-DK";
-
-  const rate = parseFloat(document.getElementById("rateControl").value);
-  utterance.rate = rate;
-
-  const selectedVoiceName = document.getElementById("voiceSelect").value;
-  const voices = speechSynthesis.getVoices();
-  const match = voices.find(v => v.name === selectedVoiceName);
-
-  if (match) {
-    utterance.voice = match;
+      </div>
+    `;
   }
 
-  speechSynthesis.speak(utterance);
-}
-function populateVoiceOptions() {
-  const select = document.getElementById("voiceSelect");
-  const voices = speechSynthesis.getVoices().filter(v => v.lang === "da-DK");
-
-  if (voices.length === 0) {
-    select.innerHTML = `<option disabled>No Danish voices found</option>`;
-    return;
+  function saveToHistory(query) {
+    let history = JSON.parse(localStorage.getItem("searchHistory") || "[]");
+    if (!history.includes(query)) {
+      history.unshift(query);
+      if (history.length > 10) history.pop();
+      localStorage.setItem("searchHistory", JSON.stringify(history));
+      loadHistory();
+    }
   }
 
-  select.innerHTML = voices.map(v => `<option value="${v.name}">${v.name}</option>`).join("");
-}
-
-// Some browsers load voices asynchronously
-speechSynthesis.onvoiceschanged = populateVoiceOptions;
-    function copyToClipboard(text) {
-      navigator.clipboard.writeText(text).then(() => {
-        alert("Copied to clipboard!");
-      });
+  function loadHistory() {
+    const history = JSON.parse(localStorage.getItem("searchHistory") || "[]");
+    const container = document.getElementById("history");
+    if (history.length === 0) {
+      container.innerHTML = "";
+      return;
     }
+    container.innerHTML = "<h3>Recent Searches</h3>" + history.map(q =>
+      `<span onclick="searchFromHistory('${q}')">${q}</span>`
+    ).join("");
+  }
 
-    function toggleDarkMode() {
-      document.body.classList.toggle("dark");
-    }
+  function searchFromHistory(query) {
+    document.getElementById("searchInput").value = query;
+    handleSearch();
+  }
 
-    function saveToHistory(query) {
-      let history = JSON.parse(localStorage.getItem("searchHistory") || "[]");
-      if (!history.includes(query)) {
-        history.unshift(query);
-        if (history.length > 10) history.pop();
-        localStorage.setItem("searchHistory", JSON.stringify(history));
-        loadHistory();
+  function levenshtein(a, b) {
+    const matrix = Array.from({ length: b.length + 1 }, (_, i) => [i]);
+    for (let j = 0; j <= a.length; j++) matrix[0][j] = j;
+    for (let i = 1; i <= b.length; i++) {
+      for (let j = 1; j <= a.length; j++) {
+        const cost = b[i - 1] === a[j - 1] ? 0 : 1;
+        matrix[i][j] = Math.min(
+          matrix[i - 1][j] + 1,
+          matrix[i][j - 1] + 1,
+          matrix[i - 1][j - 1] + cost
+        );
       }
     }
-
-    function loadHistory() {
-      const history = JSON.parse(localStorage.getItem("searchHistory") || "[]");
-      const container = document.getElementById("history");
-      if (history.length === 0) {
-        container.innerHTML = "";
-        return;
-      }
-      container.innerHTML = "<h3>Recent Searches</h3>" + history.map(q =>
-        `<span onclick="searchFromHistory('${q}')">${q}</span>`
-      ).join("");
-    }
-
-    function searchFromHistory(query) {
-      document.getElementById("searchInput").value = query;
-      handleSearch();
-    }
-
-    function levenshtein(a, b) {
-      const matrix = Array.from({ length: b.length + 1 }, (_, i) => [i]);
-      for (let j = 0; j <= a.length; j++) matrix[0][j] = j;
-      for (let i = 1; i <= b.length; i++) {
-        for (let j = 1; j <= a.length; j++) {
-          const cost = b[i - 1] === a[j - 1] ? 0 : 1;
-          matrix[i][j] = Math.min(
-            matrix[i - 1][j] + 1,
-            matrix[i][j - 1] + 1,
-            matrix[i - 1][j - 1] + cost
-          );
-        }
-      }
-      return matrix[b.length][a.length];
-    }
-  </script>
+    return matrix[b.length][a.length];
+  }
+</script>
 </body>
 </html>
