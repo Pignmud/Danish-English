@@ -135,23 +135,20 @@
     }
 
     .top-button {
-      background: linear-gradient(90deg, #e68a2e, #ffb84d);
-      color: white;
+      background: none;
       border: none;
-      padding: 0.5em 1em;
+      padding: 0.3em;
       margin: 0.5em 0;
-      border-radius: 4px;
+      font-size: 1.2em;
       cursor: pointer;
-      font-size: 0.9em;
-      font-weight: bold;
-      transition: background 0.3s ease, transform 0.2s ease;
+      color: var(--accent);
+      transition: transform 0.2s ease, color 0.3s ease;
     }
 
     .top-button:hover {
-      background: linear-gradient(90deg, #ffb84d, #e68a2e);
-      transform: translateY(-1px);
+      transform: translateY(-2px);
+      color: #cc5500;
     }
-
     .quiz-footer {
       display: flex;
       gap: 0.5em;
@@ -223,7 +220,7 @@
 
 
   <div id="results"></div>
-  <button onclick="scrollToTop()" class="top-button">⬆️ Back to Top</button>
+    <button class="top-button" onclick="scrollToTop()" title="Back to top">⬆️</button>
 
   <div id="speechControls">
     <label for="voiceSelect">Voice:</label>
@@ -237,7 +234,7 @@
 
   <div class="quiz-footer">
     <button id="retakeQuizBtn" onclick="startQuiz()" style="display:none;">🔁 Retake Quiz</button>
-    <button onclick="scrollToTop()" class="top-button">⬆️ Back to Top</button>
+    <button class="top-button" onclick="scrollToTop()" title="Back to top">⬆️</button>
   </div>
 
   <div id="history"></div>
